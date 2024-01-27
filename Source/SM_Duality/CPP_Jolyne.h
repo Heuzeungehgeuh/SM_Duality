@@ -62,6 +62,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "PlayerCharracter|InputMovement")
 	TObjectPtr<UInputAction> inputToRotate = nullptr;
 	UPROPERTY(EditAnywhere, Category = "PlayerCharracter|InputMovement")
+	TObjectPtr<UInputAction> inputToRotateUP = nullptr;
+	
+	UPROPERTY(EditAnywhere, Category = "PlayerCharracter|InputMovement")
 	float moveSpeed = 200;
 #pragma endregion
 
@@ -125,6 +128,7 @@ protected:
 	void MoveForward(const FInputActionValue& _value);
 	void MoveRight(const FInputActionValue& _value);
 	void Rotate(const FInputActionValue& _value);
+	void RotateUP(const FInputActionValue& _value);
 	void Jump(const FInputActionValue& _value);
 	void SwapEntity(const FInputActionValue& _value);
 	void Shield(const FInputActionValue& _value);

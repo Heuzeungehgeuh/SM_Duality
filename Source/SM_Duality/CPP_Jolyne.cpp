@@ -181,9 +181,34 @@ void ACPP_Jolyne::Rotate(const FInputActionValue& _value)
 	//DebugText("Rotate");
 	const float _delta = GetWorld()->DeltaTimeSeconds;
 	const float _rotationValue = _value.Get<float>() * _delta * rotationSpeed;
-	AddControllerYawInput(_rotationValue);
+	AddControllerYawInput(_rotationValue);	
 }// MouseX , E,A .
+
+
+//Vertical Rotate Cam
+void ACPP_Jolyne::RotateUP(const FInputActionValue& _value)
+{
+	if (isDead)return;
+	const float _delta = GetWorld()->DeltaTimeSeconds;
+	const float _rotationValue = -_value.Get<float>() * _delta * rotationSpeed;
+	if (springArmComponent)
+	{
+		
+		FRotator NewRotation = springArmComponent->GetComponentRotation() + FRotator(_rotationValue, 0.0f, 0.0f);
+
+		// Clamp vertical rotate
+		const float MinPitch = -80.0f;
+		const float MaxPitch = 80.0f;
+
+		NewRotation.Pitch = FMath::Clamp(NewRotation.Pitch, MinPitch, MaxPitch);
+
+		
+		springArmComponent->SetWorldRotation(NewRotation);
+	}
+}
 #pragma endregion
+
+
 #pragma region Input(clicLeft/right, Space, Ctrl)
 void ACPP_Jolyne::Jump(const FInputActionValue& _value)
 {
@@ -210,6 +235,8 @@ void ACPP_Jolyne::PetOrderGoTo(const FInputActionValue& _value)
 {
 	DebugText("Valabas");
 }
+
+
 #pragma endregion
 void ACPP_Jolyne::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -226,6 +253,9 @@ void ACPP_Jolyne::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	_inputCompo->BindAction(inputToMoveRgt, ETriggerEvent::Completed, this, &ACPP_Jolyne::MoveRight);
 	_inputCompo->BindAction(inputToRotate, ETriggerEvent::Triggered, this, &ACPP_Jolyne::Rotate);
 	_inputCompo->BindAction(inputToRotate, ETriggerEvent::Completed, this, &ACPP_Jolyne::Rotate);
+	_inputCompo->BindAction(inputToRotateUP, ETriggerEvent::Triggered, this, &ACPP_Jolyne::RotateUP);
+	_inputCompo->BindAction(inputToRotateUP, ETriggerEvent::Completed, this, &ACPP_Jolyne::RotateUP);
+	
 	_inputCompo->BindAction(inputToSwap, ETriggerEvent::Completed, this, &ACPP_Jolyne::SwapEntity);
 	_inputCompo->BindAction(inputToJump, ETriggerEvent::Completed, this, &ACPP_Jolyne::Jump);
 	_inputCompo->BindAction(inputToShield, ETriggerEvent::Completed, this, &ACPP_Jolyne::Shield);

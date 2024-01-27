@@ -97,6 +97,30 @@ void ACPP_GhostPawn::Rotate(const FInputActionValue& _value)
 	const float _rotationValue = _value.Get<float>() * _delta * rotationSpeed;
 	AddControllerYawInput(_rotationValue);
 }// MouseX , E,A .
+
+//Vertical Rotate Cam
+void ACPP_GhostPawn::RotateUP(const FInputActionValue& _value)
+{
+	
+	if (isDead)return;
+	const float _delta = GetWorld()->DeltaTimeSeconds;
+	const float _rotationValue = -_value.Get<float>() * _delta * rotationSpeed;
+	if (springArmComponent)
+	{
+		
+		FRotator NewRotation = springArmComponent->GetComponentRotation() + FRotator(_rotationValue, 0.0f, 0.0f);
+
+		// Clamp vertical rotate
+		const float MinPitch = -80.0f;
+		const float MaxPitch = 80.0f;
+
+		NewRotation.Pitch = FMath::Clamp(NewRotation.Pitch, MinPitch, MaxPitch);
+
+		
+		springArmComponent->SetWorldRotation(NewRotation);
+	}
+}
+
 #pragma endregion
 #pragma region Input(clicLeft/right, Space, Ctrl)
 void ACPP_GhostPawn::Fly(const FInputActionValue& _value)
@@ -152,6 +176,8 @@ void ACPP_GhostPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	_inputCompo->BindAction(inputToMoveRgt, ETriggerEvent::Completed, this, &ACPP_GhostPawn::MoveRight);
 	_inputCompo->BindAction(inputToRotate, ETriggerEvent::Triggered, this, &ACPP_GhostPawn::Rotate);
 	_inputCompo->BindAction(inputToRotate, ETriggerEvent::Completed, this, &ACPP_GhostPawn::Rotate);
+	_inputCompo->BindAction(inputToRotateUP, ETriggerEvent::Triggered, this, &ACPP_GhostPawn::RotateUP);
+	_inputCompo->BindAction(inputToRotateUP, ETriggerEvent::Completed, this, &ACPP_GhostPawn::RotateUP);
 
 	_inputCompo->BindAction(inputToInteract, ETriggerEvent::Completed, this, &ACPP_GhostPawn::Interact);
 	_inputCompo->BindAction(inputToSwapEntity, ETriggerEvent::Completed, this, &ACPP_GhostPawn::SwapEntity);
