@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="Encoding" addBOMForNewFiles="with BOM under Windows, with no BOM otherwise" />
+  <component name="Encoding" addBOMForNewFiles="with BOM under Windows, with no BOM otherwise">
+    <file url="file://$PROJECT_DIR$/Source/SM_Duality/CPP_GhostEntity.cpp" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/Source/SM_Duality/CPP_GhostEntity.h" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/Source/SM_Duality/CPP_GhostPawn.cpp" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/Source/SM_Duality/CPP_GhostPawn.h" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/Source/SM_Duality/CPP_Jolyne.cpp" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/Source/SM_Duality/CPP_Jolyne.h" charset="windows-1252" />
+    <file url="PROJECT" charset="windows-1252" />
+  </component>
 </project>

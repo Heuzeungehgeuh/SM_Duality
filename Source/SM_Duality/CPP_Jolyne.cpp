@@ -4,12 +4,17 @@
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputLibrary.h"
 #include "EnhancedInputComponent.h"
+#include "GhostGameModeBase.h"
+#include "CPP_GhostEntity.h"
+#include "CPP_GhostPawn.h"
+
+#include "GameFramework/WorldSettings.h"
 
 // Sets default values
 ACPP_Jolyne::ACPP_Jolyne()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	//PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.bCanEverTick = true;
 	springArmComponent = CreateDefaultSubobject<USpringArmComponent>("SpringArm");
 	cameraComponent = CreateDefaultSubobject<UCameraComponent>("camera");
@@ -37,6 +42,20 @@ void ACPP_Jolyne::Tick(float DeltaTime)
 	{
 		currentTime = IncreaseTime(currentTime, maxTime);
 	}
+	if (!jumpReady)
+	{
+		currentTime0 = IncreaseTime0(currentTime0, maxTime0);
+	}
+	/*if (!swapController) 
+	{
+		InitInput();
+		swapController = true;
+		UInputMappingContext* inputMappingContext = UInputMappingContext::GetContext("InputMappigContext");
+		if (inputMappingContext)
+		{
+			InputMappingContext->ChangeContext("ContextB");
+		}
+	}*/
 	//fonction temporaire debug UI
 	health;
 	if(health <= 0)onDeath.Broadcast(true);
@@ -64,20 +83,47 @@ float ACPP_Jolyne::IncreaseTime(float& _current, float& _maxTime)
 	}
 	return _newTime;
 }
-
+float ACPP_Jolyne::IncreaseTime0(float& _current, float& _maxTime)
+{
+	float _newTime = _current + GetWorld()->DeltaTimeSeconds;
+	if (_newTime >= _maxTime)
+	{
+		jumpReady = true;
+		DebugText("jumpReady");
+		_newTime = 0;
+	}
+	return _newTime;
+}
 void ACPP_Jolyne::ApplyGravity()
 {
 	// modifie la gravité fonction appelé pendant le saut ou au moment de toucher le sol
-	if (inJump)
+	if (jumpReady)
 	{
+		
 		// Simuler une gravité constante pendant le saut
 		FVector gravity = FVector(0.0f, 0.0f, -1.0f) * graviteInitiale;
-		inJump = false;
+		jumpReady = false;
 		//GetCharacterMovement()->AddForce(gravity);// peut etre pas besoin en laissant toujours une gravité
+		
 	}
 }
+//void ACPP_Jolyne::SetBoolSwap() 
+//{
+//
+//}
 		
-		
+void ACPP_Jolyne::SwapEntity(const FInputActionValue& _value)
+{
+	DebugText("Swap");
+	FVector _add = FVector{ 150,0,0 };
+	entity = GetWorld()->SpawnActor<ACPP_GhostPawn>(entityToSpawn, GetActorLocation() + _add, GetActorRotation());
+	APlayerController* _playerController = GetWorld()->GetFirstPlayerController();
+	if (_playerController)
+	{
+		_playerController->Possess(entity);
+	}
+	//swapController = false;
+}
 
 #pragma region overlap et perte de vie TODO
 void ACPP_Jolyne::ManageOverlap(AActor* _overlapped, AActor* _overlap)
@@ -112,7 +158,7 @@ void ACPP_Jolyne::InitInput()
 void ACPP_Jolyne::MoveForward(const FInputActionValue& _value)
 {
 	if (isDead)return;
-	DebugText("Fwd");
+	//DebugText("Fwd");
 	const FVector _fwd = GetActorForwardVector();
 	const float _delta = GetWorld()->DeltaTimeSeconds;
 	const float _movementValue = _value.Get<float>() * _delta * moveSpeed;
@@ -122,7 +168,7 @@ void ACPP_Jolyne::MoveForward(const FInputActionValue& _value)
 void ACPP_Jolyne::MoveRight(const FInputActionValue& _value)
 {
 	if (isDead)return;
-	DebugText("Rgt");
+	//DebugText("Rgt");
 	const FVector _rgt = GetActorRightVector();
 	const float _delta = GetWorld()->DeltaTimeSeconds;
 	const float _movementValue = _value.Get<float>() * _delta * moveSpeed;
@@ -132,7 +178,7 @@ void ACPP_Jolyne::MoveRight(const FInputActionValue& _value)
 void ACPP_Jolyne::Rotate(const FInputActionValue& _value)
 {
 	if (isDead)return;
-	DebugText("Rotate");
+	//DebugText("Rotate");
 	const float _delta = GetWorld()->DeltaTimeSeconds;
 	const float _rotationValue = _value.Get<float>() * _delta * rotationSpeed;
 	AddControllerYawInput(_rotationValue);
@@ -141,21 +187,11 @@ void ACPP_Jolyne::Rotate(const FInputActionValue& _value)
 #pragma region Input(clicLeft/right, Space, Ctrl)
 void ACPP_Jolyne::Jump(const FInputActionValue& _value)
 {
-	if (!inJump)
-	{
-		DebugText("Jump");
-		inJump = true;
-		//UWorld _world = GetWorld()->;
-		// Désactiver la gravité pendant le saut
-		//GetCharacterMovement()->GravityScale = 0.0f; // peut etre pas besoin en laissant toujours une gravité
-
-		// Appliquer l'impulsion verticale pour simuler le saut
-		LaunchCharacter(FVector(0.0f, 0.0f, 1.0f) * heightJump, false, true);
-	}
-	DebugText("alreadyJump");
-	ApplyGravity();
+	if (!jumpReady)return
+	DebugText("Jump");
+	LaunchCharacter(FVector(0.0f, 0.0f, 1.0f) * heightJump, false, true);
+	jumpReady = false;
 }
-
 void ACPP_Jolyne::Shield(const FInputActionValue& _value)
 {
 	DebugText("shield");
@@ -190,7 +226,7 @@ void ACPP_Jolyne::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	_inputCompo->BindAction(inputToMoveRgt, ETriggerEvent::Completed, this, &ACPP_Jolyne::MoveRight);
 	_inputCompo->BindAction(inputToRotate, ETriggerEvent::Triggered, this, &ACPP_Jolyne::Rotate);
 	_inputCompo->BindAction(inputToRotate, ETriggerEvent::Completed, this, &ACPP_Jolyne::Rotate);
-
+	_inputCompo->BindAction(inputToSwap, ETriggerEvent::Completed, this, &ACPP_Jolyne::SwapEntity);
 	_inputCompo->BindAction(inputToJump, ETriggerEvent::Completed, this, &ACPP_Jolyne::Jump);
 	_inputCompo->BindAction(inputToShield, ETriggerEvent::Completed, this, &ACPP_Jolyne::Shield);
 	_inputCompo->BindAction(inputToHeal, ETriggerEvent::Completed, this, &ACPP_Jolyne::HealPet);

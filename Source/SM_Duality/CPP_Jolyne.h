@@ -11,6 +11,9 @@
 #include "EnhancedInputLibrary.h"
 #include "CPP_Jolyne.generated.h"
 
+
+class ACPP_GhostEntity;
+class ACPP_GhostPawn;
 UCLASS()
 class SM_DUALITY_API ACPP_Jolyne : public ACharacter
 {
@@ -25,12 +28,18 @@ protected:
 #pragma endregion
 
 #pragma region Component
-	/*UPROPERTY(EditAnywhere, Category = "PlayerCharracter|Component")
-	TObjectPtr<> spawnComponent = nullptr;*/
+public:
+	UPROPERTY(EditAnywhere, Category = "PlayerCharracter|Component")
+	bool swapController = false;
+protected:
 	UPROPERTY(EditAnywhere, Category = "PlayerCharracter|Component")
 	TObjectPtr<USpringArmComponent> springArmComponent = nullptr;
 	UPROPERTY(EditAnywhere, Category = "PlayerCharracter|Component")
 	TObjectPtr<UCameraComponent> cameraComponent = nullptr;
+	UPROPERTY(EditAnywhere, Category = "PlayerCharracter|Component")
+	TSubclassOf<ACPP_GhostPawn> entityToSpawn = nullptr;
+	UPROPERTY(EditAnywhere, Category = "PlayerCharracter|Component")
+	TObjectPtr<ACPP_GhostPawn> entity = nullptr;
 #pragma endregion
 
 #pragma region Input
@@ -38,6 +47,8 @@ protected:
 	TObjectPtr<UInputMappingContext> mappingContext = nullptr;
 	UPROPERTY(EditAnywhere, Category = "PlayerCharracter|InputMovement")
 	TObjectPtr<UInputAction> inputToJump = nullptr;
+	UPROPERTY(EditAnywhere, Category = "PlayerCharracter|InputMovement")
+	TObjectPtr<UInputAction> inputToSwap = nullptr;
 	UPROPERTY(EditAnywhere, Category = "PlayerCharracter|InputMovement")
 	TObjectPtr<UInputAction> inputToShield = nullptr;
 	UPROPERTY(EditAnywhere, Category = "PlayerCharracter|InputMovement")
@@ -92,14 +103,20 @@ private:
 	float graviteInitiale = 0;
 
 	// Variable pour déterminer si le personnage est en train de sauter
+protected:
 	UPROPERTY(EditAnywhere, Category = "PlayerCharracter|Jump")
-	bool inJump = false;
+	bool jumpReady = true;
+	UPROPERTY(EditAnywhere, Category = "PlayerCharracter|Jump")
+	float currentTime0 = 0;
+	UPROPERTY(EditAnywhere, Category = "PlayerCharracter|Jump")
+	float maxTime0 = 1.5;
 #pragma endregion
 public:
 	
 	ACPP_Jolyne();
 public: // EVENT UI
 	FOnDeath& OnDeath() { return onDeath; }
+	void SetBoolSwap() { swapController = false; }
 protected:
 	
 	virtual void BeginPlay() override;
@@ -109,10 +126,12 @@ protected:
 	void MoveRight(const FInputActionValue& _value);
 	void Rotate(const FInputActionValue& _value);
 	void Jump(const FInputActionValue& _value);
+	void SwapEntity(const FInputActionValue& _value);
 	void Shield(const FInputActionValue& _value);
 	void HealPet(const FInputActionValue& _value);
 	void PetOrderGoTo(const FInputActionValue& _value);
 	float IncreaseTime(float& _current, float& _maxTime);
+	float IncreaseTime0(float& _current, float& _maxTime);
 	UFUNCTION(BlueprintCallable)
 	void DebugText(FString _text);
 	UFUNCTION()
